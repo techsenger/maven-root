@@ -189,6 +189,7 @@
                         <configuration>
                             <configLocation>checkstyle-config.xml</configLocation>
                             <consoleOutput>true</consoleOutput>
+                             <includeTestSourceDirectory>true</includeTestSourceDirectory>
                         </configuration>
                         <executions>
                             <execution>
