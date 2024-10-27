@@ -16,15 +16,30 @@
     </licenses>
 
     <url>https://github.com/techsenger/maven-root</url>
+
+    <scm>
+        <url>https://github.com/techsenger/maven-root.git</url>
+        <connection>scm:git:https://github.com/techsenger/maven-root.git</connection>
+        <developerConnection>scm:git:https://github.com/techsenger/maven-root.git</developerConnection>
+    </scm>
+
     <issueManagement>
         <system>GitHub</system>
         <url>https://github.com/techsenger/maven-root/issues</url>
     </issueManagement>
 
+    <developers>
+        <developer>
+            <id>pavel-castornii</id>
+            <name>Pavel Castornii</name>
+        </developer>
+    </developers>
+
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <maven.compiler.release>22</maven.compiler.release>
         <failsafe.argument.line></failsafe.argument.line>
+        <checkstyle.config.location>checkstyle-config.xml</checkstyle.config.location>
         <!-- versions -->
         <cs-config.version>0.9.0</cs-config.version>
         <checkstyle.version>10.18.2</checkstyle.version>
@@ -39,9 +54,13 @@
         <xml.plugin.version>1.0.2</xml.plugin.version>
         <surefire.plugin.version>3.2.3</surefire.plugin.version>
         <failsafe.plugin.version>3.2.3</failsafe.plugin.version>
-        <javadoc.plugin.version>3.3.1</javadoc.plugin.version>
+        <javadoc.plugin.version>3.10.1</javadoc.plugin.version>
         <source.plugin.version>3.2.1</source.plugin.version>
         <exec.plugin.version>3.1.1</exec.plugin.version>
+        <javafx.plugin.version>0.0.8</javafx.plugin.version>
+        <assembly.plugin.version>3.7.1</assembly.plugin.version>
+        <gpg.plugin.version>3.2.7</gpg.plugin.version>
+        <publishing.plugin.version>0.6.0</publishing.plugin.version>
     </properties>
 
     <build>
@@ -54,45 +73,6 @@
                     <release>${maven.compiler.release}</release>
                 </configuration>
             </plugin>
-            <!--
-                Adds source and resource directories to our build (for IT tests)
-                this plugin is not used until this NB issue is resolved
-                https://issues.apache.org/jira/browse/NETBEANS-2470
-            -->
-            <!--<plugin>
-                <groupId>org.codehaus.mojo</groupId>
-                <artifactId>build-helper-maven-plugin</artifactId>
-                <version>1.9.1</version>
-                <executions>
-                    <execution>
-                        <id>add-integration-test-sources</id>
-                        <phase>generate-test-sources</phase>
-                        <goals>
-                            <goal>add-test-source</goal>
-                        </goals>
-                        <configuration>
-                            <sources>
-                                <source>src/it/java</source>
-                            </sources>
-                        </configuration>
-                    </execution>
-                    <execution>
-                        <id>add-integration-test-resources</id>
-                        <phase>generate-test-resources</phase>
-                        <goals>
-                            <goal>add-test-resource</goal>
-                        </goals>
-                        <configuration>
-                            <resources>
-                                <resource>
-                                    <filtering>true</filtering>
-                                    <directory>src/it/resources</directory>
-                                </resource>
-                            </resources>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>-->
             <!-- Runs unit tests -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
@@ -100,7 +80,7 @@
                 <version>${surefire.plugin.version}</version>
                 <configuration>
                     <!-- Skips unit tests if the value of skip.unit.tests property is true -->
-                    <skipTests>${skip.unit.tests}</skipTests>
+                    <skipTests>${surefire.plugin.skip}</skipTests>
                     <!-- Excludes integration tests when unit tests are run -->
                     <excludes>
                         <exclude>**/*IT.java</exclude>
@@ -124,7 +104,7 @@
                             <!--<goal>verify</goal>-->
                         </goals>
                         <configuration>
-                            <skipTests>${skip.integration.tests}</skipTests>
+                            <skipTests>${failsafe.plugin.skip}</skipTests>
                             <argLine>${failsafe.argument.line}</argLine>
                             <!-- stop after this count of failures -->
                             <!--<skipAfterFailureCount>1</skipAfterFailureCount>-->
@@ -143,74 +123,112 @@
                     </execution>
                 </executions>
             </plugin>
-            <!-- Plugin generates reports in .html for UT and IT tests -->
+            <!-- Runs checkstyle static code analysis -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-surefire-report-plugin</artifactId>
-                <version>${surefire.plugin.version}</version>
+                <artifactId>maven-checkstyle-plugin</artifactId>
+                <version>${checkstyle.plugin.version}</version>
                 <configuration>
-                    <!-- we don't use site plugin, so disable xref -->
-                    <linkXRef>false</linkXRef>
+                    <configLocation>${checkstyle.config.location}</configLocation>
+                    <consoleOutput>true</consoleOutput>
+                    <includeTestSourceDirectory>true</includeTestSourceDirectory>
+                    <skip>${checkstyle.plugin.skip}</skip>
                 </configuration>
                 <executions>
                     <execution>
                         <goals>
-                            <goal>${report.plugin.goal}</goal>
+                            <goal>check</goal>
                         </goals>
-                        <phase>${report.plugin.phase}</phase>
+                        <phase>package</phase>
                     </execution>
                 </executions>
+                <dependencies>
+                    <dependency>
+                      <groupId>com.puppycrawl.tools</groupId>
+                      <artifactId>checkstyle</artifactId>
+                      <version>${checkstyle.version}</version>
+                    </dependency>
+                    <dependency>
+                        <groupId>com.techsenger.cs-config</groupId>
+                        <artifactId>cs-config</artifactId>
+                        <version>${cs-config.version}</version>
+                    </dependency>
+                </dependencies>
             </plugin>
         </plugins>
     </build>
 
     <profiles>
+        <!--
+            Default profile - compilation, unit and IT tests, checkstyle
+            RUN: mvn clean install
+        -->
         <profile>
-            <!--
-                This profile is for testing and generating everything before adding to maven repo
-                RUN: mvn clean install
-            -->
             <id>default</id>
             <activation>
                 <activeByDefault>true</activeByDefault>
             </activation>
             <properties>
-                <skip.unit.tests>false</skip.unit.tests>
-                <skip.integration.tests>false</skip.integration.tests>
-                <report.plugin.goal>failsafe-report-only</report.plugin.goal>
-                <report.plugin.phase>post-integration-test</report.plugin.phase>
+                <surefire.plugin.skip>false</surefire.plugin.skip>
+                <failsafe.plugin.skip>false</failsafe.plugin.skip>
+                <checkstyle.plugin.skip>false</checkstyle.plugin.skip>
             </properties>
             <build>
                 <plugins>
+                    <!-- Plugin generates reports in .html for UT and IT tests -->
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-checkstyle-plugin</artifactId>
-                        <version>${checkstyle.plugin.version}</version>
+                        <artifactId>maven-surefire-report-plugin</artifactId>
+                        <version>${surefire.plugin.version}</version>
                         <configuration>
-                            <configLocation>checkstyle-config.xml</configLocation>
-                            <consoleOutput>true</consoleOutput>
-                             <includeTestSourceDirectory>true</includeTestSourceDirectory>
+                            <!-- we don't use site plugin, so disable xref -->
+                            <linkXRef>false</linkXRef>
                         </configuration>
                         <executions>
                             <execution>
-                                <phase>package</phase>
                                 <goals>
-                                    <goal>check</goal>
+                                    <goal>report-only</goal>
+                                    <goal>failsafe-report-only</goal>
                                 </goals>
+                                <phase>post-integration-test</phase>
                             </execution>
                         </executions>
-                        <dependencies>
-                            <dependency>
-                              <groupId>com.puppycrawl.tools</groupId>
-                              <artifactId>checkstyle</artifactId>
-                              <version>${checkstyle.version}</version>
-                            </dependency>
-                            <dependency>
-                                <groupId>com.techsenger.cs-config</groupId>
-                                <artifactId>cs-config</artifactId>
-                                <version>${cs-config.version}</version>
-                            </dependency>
-                        </dependencies>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+
+        <!--
+            Release profile to create artifacts, to check them and upload to central repo.
+            RUN: mvn clean deploy -P release
+        -->
+        <profile>
+            <id>release</id>
+            <properties>
+                <surefire.plugin.skip>false</surefire.plugin.skip>
+                <failsafe.plugin.skip>false</failsafe.plugin.skip>
+                <checkstyle.plugin.skip>false</checkstyle.plugin.skip>
+            </properties>
+            <build>
+                <plugins>
+                    <!-- Plugin generates reports in .html for UT and IT tests -->
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-surefire-report-plugin</artifactId>
+                        <version>${surefire.plugin.version}</version>
+                        <configuration>
+                            <!-- we don't use site plugin, so disable xref -->
+                            <linkXRef>false</linkXRef>
+                        </configuration>
+                        <executions>
+                            <execution>
+                                <goals>
+                                    <goal>report-only</goal>
+                                    <goal>failsafe-report-only</goal>
+                                </goals>
+                                <phase>post-integration-test</phase>
+                            </execution>
+                        </executions>
                     </plugin>
                     <!--
                         Generates *-javadoc.jar
@@ -229,8 +247,9 @@
                                     <goal>jar</goal>
                                 </goals>
                                 <configuration>
-                                    <!-- to skip errors in javadocs, for example absent info -->
+                                    <!-- to skip errors in javadocs -->
                                     <doclint>none</doclint>
+                                    <failOnWarnings>true</failOnWarnings>
                                 </configuration>
                             </execution>
                         </executions>
@@ -250,23 +269,55 @@
                             </execution>
                         </executions>
                     </plugin>
-                    <!-- Generates checksums. It seems impossible to skip this plugin -->
+                    <!-- Signs artifacts -->
                     <plugin>
-                        <groupId>net.nicoulaj.maven.plugins</groupId>
-                        <artifactId>checksum-maven-plugin</artifactId>
-                        <version>1.11</version>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-gpg-plugin</artifactId>
+                        <version>${gpg.plugin.version}</version>
                         <executions>
                             <execution>
+                                <id>sign-artifacts</id>
+                                <phase>verify</phase>
                                 <goals>
-                                    <goal>artifacts</goal>
+                                    <goal>sign</goal>
                                 </goals>
+                                <configuration>
+                                    <gpgArguments>
+                                        <arg>--pinentry-mode</arg>
+                                        <arg>loopback</arg>
+                                    </gpgArguments>
+                                </configuration>
                             </execution>
                         </executions>
                     </plugin>
-                    <!--
-                        Plugin generates reports in .html for UT and IT tests.
-                        This plugin is overridden as we have two goals.
-                    -->
+                    <!-- Uploads artifacts to sonatype repo -->
+                    <plugin>
+                        <groupId>org.sonatype.central</groupId>
+                        <artifactId>central-publishing-maven-plugin</artifactId>
+                        <version>${publishing.plugin.version}</version>
+                        <extensions>true</extensions>
+                        <configuration>
+                            <publishingServerId>central</publishingServerId>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+
+        <!--
+            This profile includes only unit tests - no IT tests, no checkstyle etc
+            RUN: mvn clean install -P unit-tests
+        -->
+        <profile>
+            <id>unit-tests</id>
+            <properties>
+                <surefire.plugin.skip>false</surefire.plugin.skip>
+                <failsafe.plugin.skip>true</failsafe.plugin.skip>
+                <checkstyle.plugin.skip>true</checkstyle.plugin.skip>
+            </properties>
+            <build>
+                <plugins>
+                    <!-- Plugin generates reports in .html for UT and IT tests -->
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-surefire-report-plugin</artifactId>
@@ -280,38 +331,47 @@
                                 <goals>
                                     <goal>report-only</goal>
                                 </goals>
-                                <phase>post-integration-test</phase>
+                                <phase>prepare-package</phase>
                             </execution>
                         </executions>
                     </plugin>
                 </plugins>
             </build>
         </profile>
+
+        <!--
+            This profile includes only integration tests - no unit tests, no checkstyle etc
+            RUN: mvn clean verify -P integration-tests
+        -->
         <profile>
-            <!--
-                This profile includes on unit tests - no javadoc, no sources, etc.
-                RUN: mvn clean install -P unit-tests
-            -->
-            <id>unit-tests</id>
-            <properties>
-                <skip.unit.tests>false</skip.unit.tests>
-                <skip.integration.tests>true</skip.integration.tests>
-                <report.plugin.goal>report-only</report.plugin.goal>
-                <report.plugin.phase>prepare-package</report.plugin.phase>
-            </properties>
-        </profile>
-        <profile>
-            <!--
-                This profile includes only integration tests - no javadoc, no sources, etc.
-                RUN: mvn clean verify -P integration-tests
-            -->
             <id>integration-tests</id>
             <properties>
-                <skip.unit.tests>true</skip.unit.tests>
-                <skip.integration.tests>false</skip.integration.tests>
-                <report.plugin.goal>failsafe-report-only</report.plugin.goal>
-                <report.plugin.phase>post-integration-test</report.plugin.phase>
+                <surefire.plugin.skip>true</surefire.plugin.skip>
+                <failsafe.plugin.skip>false</failsafe.plugin.skip>
+                <checkstyle.plugin.skip>true</checkstyle.plugin.skip>
             </properties>
+            <build>
+                <plugins>
+                    <!-- Plugin generates reports in .html for UT and IT tests -->
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-surefire-report-plugin</artifactId>
+                        <version>${surefire.plugin.version}</version>
+                        <configuration>
+                            <!-- we don't use site plugin, so disable xref -->
+                            <linkXRef>false</linkXRef>
+                        </configuration>
+                        <executions>
+                            <execution>
+                                <goals>
+                                    <goal>failsafe-report-only</goal>
+                                </goals>
+                                <phase>post-integration-test</phase>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
         </profile>
     </profiles>
 </project>
