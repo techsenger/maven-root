@@ -3,9 +3,9 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.techsenger.maven-root</groupId>
     <artifactId>maven-root</artifactId>
-    <version>1.0.0</version>
+    <version>1.1.0</version>
     <packaging>pom</packaging>
-    <name>Techsenger Maven Root</name>
+    <name>Maven Root</name>
     <description>Techsenger root project for all Maven projects.</description>
 
     <licenses>
@@ -18,9 +18,9 @@
     <url>https://github.com/techsenger/maven-root</url>
 
     <scm>
-        <url>https://github.com/techsenger/maven-root.git</url>
         <connection>scm:git:https://github.com/techsenger/maven-root.git</connection>
         <developerConnection>scm:git:https://github.com/techsenger/maven-root.git</developerConnection>
+        <url>https://github.com/techsenger/maven-root</url>
     </scm>
 
     <issueManagement>
@@ -38,10 +38,14 @@
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <maven.compiler.release>22</maven.compiler.release>
-        <failsafe.argument.line></failsafe.argument.line>
+        <surefire.plugin.arguments></surefire.plugin.arguments>
+        <failsafe.plugin.arguments></failsafe.plugin.arguments>
+        <failsafe.plugin.maxfailures>100</failsafe.plugin.maxfailures>
         <checkstyle.config.location>checkstyle-config.xml</checkstyle.config.location>
+        <publishing.plugin.exclusions></publishing.plugin.exclusions>
+        <javadoc.plugin.skip>false</javadoc.plugin.skip>
         <!-- versions -->
-        <cs-config.version>0.9.0</cs-config.version>
+        <checkstyle.config.version>0.9.1</checkstyle.config.version>
         <checkstyle.version>10.18.2</checkstyle.version>
         <checkstyle.plugin.version>3.5.0</checkstyle.plugin.version>
         <compiler.plugin.version>3.10.1</compiler.plugin.version>
@@ -81,11 +85,12 @@
                 <configuration>
                     <!-- Skips unit tests if the value of skip.unit.tests property is true -->
                     <skipTests>${surefire.plugin.skip}</skipTests>
+                    <!--<argLine>@{argLine} - - add-exports module.svbi/package.svbi=....</argLine>-->
+                    <argLine>${surefire.plugin.arguments}</argLine>
                     <!-- Excludes integration tests when unit tests are run -->
                     <excludes>
                         <exclude>**/*IT.java</exclude>
                     </excludes>
-                    <!--<argLine>@{argLine} - - add-exports module.svbi/package.svbi=....</argLine>-->
                     <!-- by default surefire shows only message of the exception -->
                     <trimStackTrace>false</trimStackTrace>
                 </configuration>
@@ -105,13 +110,13 @@
                         </goals>
                         <configuration>
                             <skipTests>${failsafe.plugin.skip}</skipTests>
-                            <argLine>${failsafe.argument.line}</argLine>
-                            <!-- stop after this count of failures -->
-                            <!--<skipAfterFailureCount>1</skipAfterFailureCount>-->
                             <!-- - -add-opens module/package=javassist -->
                             <!-- to see system property "java.class.path", details here:
                              https://maven.apache.org/surefire/maven-surefire-plugin/examples/class-loading.html
                             -->
+                            <argLine>${failsafe.plugin.arguments}</argLine>
+                            <!-- stop after this count of failures -->
+                            <skipAfterFailureCount>${failsafe.plugin.maxfailures}</skipAfterFailureCount>
                             <useSystemClassLoader>false</useSystemClassLoader>
                             <useFile>false</useFile>
                             <!-- by default failsafe shows only message of the exception -->
@@ -151,7 +156,7 @@
                     <dependency>
                         <groupId>com.techsenger.cs-config</groupId>
                         <artifactId>cs-config</artifactId>
-                        <version>${cs-config.version}</version>
+                        <version>${checkstyle.config.version}</version>
                     </dependency>
                 </dependencies>
             </plugin>
@@ -253,6 +258,9 @@
                                 </configuration>
                             </execution>
                         </executions>
+                        <configuration>
+                            <skip>${javadoc.plugin.skip}</skip>
+                        </configuration>
                     </plugin>
                     <!-- Generates *-sources.jar -->
                     <plugin>
@@ -297,6 +305,7 @@
                         <version>${publishing.plugin.version}</version>
                         <extensions>true</extensions>
                         <configuration>
+                            <excludeArtifacts>${publishing.plugin.exclusions}</excludeArtifacts>
                             <publishingServerId>central</publishingServerId>
                         </configuration>
                     </plugin>
