@@ -3,7 +3,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.techsenger.maven-root</groupId>
     <artifactId>maven-root</artifactId>
-    <version>1.4.0-SNAPSHOT</version>
+    <version>1.4.0</version>
     <packaging>pom</packaging>
     <name>Maven Root</name>
     <description>Techsenger root project for all Maven projects.</description>
@@ -37,7 +37,7 @@
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <!-- This is the minimum JDK version, while projects can specify newer versions -->
+        <!-- Minimum JDK version, projects can use newer versions -->
         <maven.compiler.release>11</maven.compiler.release>
         <surefire.plugin.arguments></surefire.plugin.arguments>
         <failsafe.plugin.arguments></failsafe.plugin.arguments>
