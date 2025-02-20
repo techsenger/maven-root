@@ -3,7 +3,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.techsenger.maven-root</groupId>
     <artifactId>maven-root</artifactId>
-    <version>1.4.0</version>
+    <version>1.5.0</version>
     <packaging>pom</packaging>
     <name>Maven Root</name>
     <description>Techsenger root project for all Maven projects.</description>
@@ -55,7 +55,7 @@
         <processor.plugin.version>4.0-rc1</processor.plugin.version>
         <resources.plugin.version>3.1.0</resources.plugin.version>
         <plugin.plugin.version>3.13.0</plugin.plugin.version>
-        <war.plugin.version>3.2.2</war.plugin.version>
+        <war.plugin.version>3.4.0</war.plugin.version>
         <build.helper.plugin.version>3.2.0</build.helper.plugin.version>
         <xml.plugin.version>1.0.2</xml.plugin.version>
         <surefire.plugin.version>3.2.3</surefire.plugin.version>
@@ -67,6 +67,7 @@
         <assembly.plugin.version>3.7.1</assembly.plugin.version>
         <gpg.plugin.version>3.2.7</gpg.plugin.version>
         <publishing.plugin.version>0.6.0</publishing.plugin.version>
+        <exec.plugin.version>3.1.0</exec.plugin.version>
     </properties>
 
     <build>
