@@ -24,7 +24,7 @@ jobs:
           <settings>
             <servers>
               <server>
-                <id>repsy</id>
+                <id>repsy-snapshots</id>
                 <username>${{ secrets.REPSY_USERNAME }}</username>
                 <password>${{ secrets.REPSY_PASSWORD }}</password>
               </server>
