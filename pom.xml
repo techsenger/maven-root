@@ -35,13 +35,19 @@
         </developer>
     </developers>
 
-    <distributionManagement>
-        <snapshotRepository>
+    <repositories>
+        <repository>
             <id>repsy-snapshots</id>
-            <name>Repsy Snapshot Repo</name>
             <url>https://repo.repsy.io/mvn/techsenger/snapshots</url>
-        </snapshotRepository>
-    </distributionManagement>
+            <releases>
+                <enabled>false</enabled>
+            </releases>
+            <snapshots>
+                <enabled>true</enabled>
+                <updatePolicy>always</updatePolicy>
+            </snapshots>
+        </repository>
+    </repositories>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
