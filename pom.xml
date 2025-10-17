@@ -60,7 +60,7 @@
         <publishing.plugin.exclusions></publishing.plugin.exclusions>
         <javadoc.plugin.skip>false</javadoc.plugin.skip>
         <!-- versions -->
-        <checkstyle.config.version>1.0.0</checkstyle.config.version>
+        <checkstyle.config.version>1.1.0-SNAPSHOT</checkstyle.config.version>
         <checkstyle.version>10.18.2</checkstyle.version>
         <checkstyle.plugin.version>3.5.0</checkstyle.plugin.version>
         <compiler.plugin.version>3.10.1</compiler.plugin.version>
@@ -180,8 +180,8 @@
                       <version>${checkstyle.version}</version>
                     </dependency>
                     <dependency>
-                        <groupId>com.techsenger.cs-config</groupId>
-                        <artifactId>cs-config</artifactId>
+                        <groupId>com.techsenger.checkstyle.config</groupId>
+                        <artifactId>checkstyle-config</artifactId>
                         <version>${checkstyle.config.version}</version>
                     </dependency>
                 </dependencies>
