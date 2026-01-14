@@ -70,6 +70,7 @@
         <checkstyle.config.version>1.3.0</checkstyle.config.version>
         <checkstyle.version>10.18.2</checkstyle.version>
         <checkstyle.plugin.version>3.5.0</checkstyle.plugin.version>
+        <bom.properties.plugin.version>1.0.0-SNAPSHOT</bom.properties.plugin.version>
         <compiler.plugin.version>3.10.1</compiler.plugin.version>
         <dependency.plugin.version>3.8.1</dependency.plugin.version>
         <install.plugin.version>3.1.3</install.plugin.version>
