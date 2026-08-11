@@ -65,7 +65,7 @@
         <failsafe.plugin.maxfailures>100</failsafe.plugin.maxfailures>
         <checkstyle.config.location>checkstyle-config.xml</checkstyle.config.location>
         <publishing.plugin.exclusions></publishing.plugin.exclusions>
-        <javadoc.plugin.skip>false</javadoc.plugin.skip>
+
         <!-- versions -->
         <checkstyle.config.version>1.4.0-SNAPSHOT</checkstyle.config.version>
         <checkstyle.version>10.18.2</checkstyle.version>
@@ -89,7 +89,6 @@
         <assembly.plugin.version>3.7.1</assembly.plugin.version>
         <gpg.plugin.version>3.2.7</gpg.plugin.version>
         <publishing.plugin.version>0.6.0</publishing.plugin.version>
-        <exec.plugin.version>3.1.0</exec.plugin.version>
     </properties>
 
     <build>
@@ -194,10 +193,78 @@
                     </dependency>
                 </dependencies>
             </plugin>
+            <!--
+                Generates *-javadoc.jar. Skipped by default, enabled by "release" and "snapshot" profiles.
+                Note: This plugin works only with javadoc tool from jdk 14+, others will give module not
+                found exceptions. At the same time source and target versions can be any as the problem is in
+                tool.
+            -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-javadoc-plugin</artifactId>
+                <version>${javadoc.plugin.version}</version>
+                <executions>
+                    <execution>
+                        <id>attach-javadocs</id>
+                        <goals>
+                            <goal>jar</goal>
+                        </goals>
+                        <configuration>
+                            <!-- to skip errors in javadocs -->
+                            <doclint>none</doclint>
+                            <failOnWarnings>true</failOnWarnings>
+                        </configuration>
+                    </execution>
+                </executions>
+                <configuration>
+                    <skip>${javadoc.plugin.skip}</skip>
+                </configuration>
+            </plugin>
+            <!-- Generates *-sources.jar. Skipped by default, enabled by "release" and "snapshot" profiles. -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-source-plugin</artifactId>
+                <version>${source.plugin.version}</version>
+                <executions>
+                    <execution>
+                        <id>attach-sources</id>
+                        <goals>
+                            <!-- https://stackoverflow.com/a/10568004/5057736 -->
+                            <goal>jar-no-fork</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <skipSource>${source.plugin.skip}</skipSource>
+                </configuration>
+            </plugin>
+            <!-- Signs artifacts. Skipped by default, enabled by "release" and "snapshot" profiles. -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-gpg-plugin</artifactId>
+                <version>${gpg.plugin.version}</version>
+                <executions>
+                    <execution>
+                        <id>sign-artifacts</id>
+                        <phase>verify</phase>
+                        <goals>
+                            <goal>sign</goal>
+                        </goals>
+                        <configuration>
+                            <skip>${gpg.plugin.skip}</skip>
+                            <gpgArguments>
+                                <arg>--pinentry-mode</arg>
+                                <arg>loopback</arg>
+                            </gpgArguments>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
         </plugins>
     </build>
 
     <profiles>
+
         <!--
             Default profile - compilation, unit and IT tests, checkstyle
             RUN: mvn clean install
@@ -211,6 +278,9 @@
                 <surefire.plugin.skip>false</surefire.plugin.skip>
                 <failsafe.plugin.skip>false</failsafe.plugin.skip>
                 <checkstyle.plugin.skip>false</checkstyle.plugin.skip>
+                <javadoc.plugin.skip>true</javadoc.plugin.skip>
+                <source.plugin.skip>true</source.plugin.skip>
+                <gpg.plugin.skip>true</gpg.plugin.skip>
             </properties>
             <build>
                 <plugins>
@@ -238,7 +308,7 @@
         </profile>
 
         <!--
-            Release profile to create artifacts, to check them and upload to central repo.
+            Release profile to create artifacts, sign them, attach javadoc/sources and upload to central repo.
             RUN: mvn clean deploy -P release
         -->
         <profile>
@@ -247,6 +317,9 @@
                 <surefire.plugin.skip>false</surefire.plugin.skip>
                 <failsafe.plugin.skip>false</failsafe.plugin.skip>
                 <checkstyle.plugin.skip>false</checkstyle.plugin.skip>
+                <javadoc.plugin.skip>false</javadoc.plugin.skip>
+                <source.plugin.skip>false</source.plugin.skip>
+                <gpg.plugin.skip>false</gpg.plugin.skip>
             </properties>
             <build>
                 <plugins>
@@ -266,69 +339,6 @@
                                     <goal>failsafe-report-only</goal>
                                 </goals>
                                 <phase>post-integration-test</phase>
-                            </execution>
-                        </executions>
-                    </plugin>
-                    <!--
-                        Generates *-javadoc.jar
-                        Node: This plugin works only with javadoc tool from jdk 14+, others will give module not
-                        found exceptions. At the same time source and target vervions can be any as the problem is in
-                        tool.
-                    -->
-                    <plugin>
-                        <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-javadoc-plugin</artifactId>
-                        <version>${javadoc.plugin.version}</version>
-                        <executions>
-                            <execution>
-                                <id>attach-javadocs</id>
-                                <goals>
-                                    <goal>jar</goal>
-                                </goals>
-                                <configuration>
-                                    <!-- to skip errors in javadocs -->
-                                    <doclint>none</doclint>
-                                    <failOnWarnings>true</failOnWarnings>
-                                </configuration>
-                            </execution>
-                        </executions>
-                        <configuration>
-                            <skip>${javadoc.plugin.skip}</skip>
-                        </configuration>
-                    </plugin>
-                    <!-- Generates *-sources.jar -->
-                    <plugin>
-                        <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-source-plugin</artifactId>
-                        <version>${source.plugin.version}</version>
-                        <executions>
-                            <execution>
-                                <id>attach-sources</id>
-                                <goals>
-                                    <!-- https://stackoverflow.com/a/10568004/5057736 -->
-                                    <goal>jar-no-fork</goal>
-                                </goals>
-                            </execution>
-                        </executions>
-                    </plugin>
-                    <!-- Signs artifacts -->
-                    <plugin>
-                        <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-gpg-plugin</artifactId>
-                        <version>${gpg.plugin.version}</version>
-                        <executions>
-                            <execution>
-                                <id>sign-artifacts</id>
-                                <phase>verify</phase>
-                                <goals>
-                                    <goal>sign</goal>
-                                </goals>
-                                <configuration>
-                                    <gpgArguments>
-                                        <arg>--pinentry-mode</arg>
-                                        <arg>loopback</arg>
-                                    </gpgArguments>
-                                </configuration>
                             </execution>
                         </executions>
                     </plugin>
@@ -348,6 +358,22 @@
         </profile>
 
         <!--
+            Snapshot profile: builds and deploys artifacts with javadoc, sources and GPG signatures to repsy.
+            RUN: mvn clean deploy -P snapshot
+        -->
+        <profile>
+            <id>snapshot</id>
+            <properties>
+                <surefire.plugin.skip>false</surefire.plugin.skip>
+                <failsafe.plugin.skip>false</failsafe.plugin.skip>
+                <checkstyle.plugin.skip>false</checkstyle.plugin.skip>
+                <javadoc.plugin.skip>false</javadoc.plugin.skip>
+                <source.plugin.skip>false</source.plugin.skip>
+                <gpg.plugin.skip>false</gpg.plugin.skip>
+            </properties>
+        </profile>
+
+        <!--
             This profile includes only unit tests - no IT tests, no checkstyle etc
             RUN: mvn clean install -P unit-tests
         -->
@@ -357,6 +383,9 @@
                 <surefire.plugin.skip>false</surefire.plugin.skip>
                 <failsafe.plugin.skip>true</failsafe.plugin.skip>
                 <checkstyle.plugin.skip>true</checkstyle.plugin.skip>
+                <javadoc.plugin.skip>true</javadoc.plugin.skip>
+                <source.plugin.skip>true</source.plugin.skip>
+                <gpg.plugin.skip>true</gpg.plugin.skip>
             </properties>
             <build>
                 <plugins>
@@ -392,6 +421,9 @@
                 <surefire.plugin.skip>true</surefire.plugin.skip>
                 <failsafe.plugin.skip>false</failsafe.plugin.skip>
                 <checkstyle.plugin.skip>true</checkstyle.plugin.skip>
+                <javadoc.plugin.skip>true</javadoc.plugin.skip>
+                <source.plugin.skip>true</source.plugin.skip>
+                <gpg.plugin.skip>true</gpg.plugin.skip>
             </properties>
             <build>
                 <plugins>
